@@ -14,7 +14,7 @@ if not os.path.exists(MODEL_PATH):
 # モデルロード
 model = YOLO(MODEL_PATH)
 
-st.title("🔩 ネジカウントアプリ")
+st.title("🔩 ボルトカウントアプリ")
 uploaded_file = st.file_uploader("画像をアップロード", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
