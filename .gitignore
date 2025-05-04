@@ -1,0 +1,4 @@
+# Python キャッシュ系
+__pycache__/
+*.pyc
+*.pyo
