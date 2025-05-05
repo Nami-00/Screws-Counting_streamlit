@@ -60,4 +60,3 @@ with tab2:
         image = Image.open(uploaded_screw).convert("RGB")
         processed_image, counts = detect_and_draw(image, screw_model)
         st.image(processed_image, caption=f"検出ネジ数：{sum(counts.values())}本", use_container_width=True)
-
