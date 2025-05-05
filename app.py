@@ -1,12 +1,13 @@
 import streamlit as st
 from ultralytics import YOLO
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 import numpy as np
 import cv2
 import os
+import tempfile
 
 st.set_page_config(page_title="ネジ・ナットボルトカウントアプリ", layout="wide")
-st.markdown("<h1 style='font-size: 36px;'>🔩 ネジ・ナット・ボルト カウントアプリ</h1>", unsafe_allow_html=True)
+st.title("🔩 ネジ・ナット・ボルト カウントアプリ")
 
 # モデル読み込み
 def load_model(model_path):
@@ -15,7 +16,19 @@ def load_model(model_path):
         st.stop()
     return YOLO(model_path)
 
-# 共通処理関数
+# 画像読み込み関数（拡張子非依存・形式変換）
+def load_image(uploaded_file):
+    try:
+        suffix = os.path.splitext(uploaded_file.name)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            tmp_path = tmp_file.name
+        return Image.open(tmp_path).convert("RGB")
+    except UnidentifiedImageError:
+        st.error("このファイルは画像として読み込めません。JPEGまたはPNG形式をご使用ください。")
+        return None
+
+# 画像処理＆描画共通関数
 def detect_and_draw(image, model):
     img_array = np.array(image)
     img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
@@ -39,24 +52,27 @@ def detect_and_draw(image, model):
 
     return image_draw, count_dict
 
-# ✅ 順番入れ替え（左がナット・ボルト）
+# ✅ タブの順序を「ナット・ボルト → ネジ」に変更
 tab1, tab2 = st.tabs(["🔧 ナットとボルトカウント", "🔩 ネジカウント"])
 
 with tab1:
-    st.markdown("<h2 style='font-size:28px;'>🔧 ナット・ボルトカウントアプリ</h2>", unsafe_allow_html=True)
+    st.header("ナット・ボルトカウントアプリ")
     nutbolt_model = load_model("nut_bolt_model.pt")
-    uploaded_nutbolt = st.file_uploader("ナットまたはボルトの画像をアップロード", type=["jpg", "jpeg", "png"], key="nutbolt")
+    uploaded_nutbolt = st.file_uploader("ナットまたはボルトの画像をアップロード", type=None, key="nutbolt")
     if uploaded_nutbolt:
-        image = Image.open(uploaded_nutbolt).convert("RGB")
-        processed_image, counts = detect_and_draw(image, nutbolt_model)
-        count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
-        st.image(processed_image, caption=f"検出結果：{count_summary}", use_container_width=True)
+        image = load_image(uploaded_nutbolt)
+        if image:
+            processed_image, counts = detect_and_draw(image, nutbolt_model)
+            count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
+            st.image(processed_image, caption=f"検出結果：{count_summary}", use_container_width=True)
 
 with tab2:
-    st.markdown("<h2 style='font-size:28px;'>🔩 ネジカウントアプリ</h2>", unsafe_allow_html=True)
+    st.header("ネジカウントアプリ")
     screw_model = load_model("screw_model.pt")
-    uploaded_screw = st.file_uploader("ネジの画像をアップロード", type=["jpg", "jpeg", "png"], key="screw")
+    uploaded_screw = st.file_uploader("ネジの画像をアップロード", type=None, key="screw")
     if uploaded_screw:
-        image = Image.open(uploaded_screw).convert("RGB")
-        processed_image, counts = detect_and_draw(image, screw_model)
-        st.image(processed_image, caption=f"検出ネジ数：{sum(counts.values())}本", use_container_width=True)
+        image = load_image(uploaded_screw)
+        if image:
+            processed_image, counts = detect_and_draw(image, screw_model)
+            st.image(processed_image, caption=f"検出ネジ数：{sum(counts.values())}本", use_container_width=True)
+
