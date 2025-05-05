@@ -16,13 +16,17 @@ def load_model(model_path):
         st.stop()
     return YOLO(model_path)
 
-# 画像読み込み関数（拡張子非依存・形式変換）
+# 画像読み込み関数（拡張子を小文字に変換して読み込み）
 def load_image(uploaded_file):
     try:
-        suffix = os.path.splitext(uploaded_file.name)[1]
+        # 拡張子を小文字に変換して安全に処理
+        _, ext = os.path.splitext(uploaded_file.name)
+        suffix = ext.lower() if ext else ".jpg"  # 万が一拡張子なしなら .jpg にする
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
             tmp_file.write(uploaded_file.read())
             tmp_path = tmp_file.name
+
         return Image.open(tmp_path).convert("RGB")
     except UnidentifiedImageError:
         st.error("このファイルは画像として読み込めません。JPEGまたはPNG形式をご使用ください。")
