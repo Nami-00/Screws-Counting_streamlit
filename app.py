@@ -5,6 +5,8 @@ import numpy as np
 import cv2
 import os
 import tempfile
+from torchvision.ops import nms
+import torch
 
 st.set_page_config(page_title="ネジ・ナットボルトカウントアプリ", layout="wide")
 st.title("🔩 ネジ・ナット・ボルト カウントアプリ")
@@ -33,26 +35,37 @@ def load_image(uploaded_file):
         return None
 
 # 画像処理＆描画共通関数
-def detect_and_draw(image, model, conf_threshold=0.25):
+def detect_and_draw(image, model, conf_threshold=0.25, iou_threshold=0.4):
     img_array = np.array(image)
     img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-    results = model.predict(img_cv, conf=conf_threshold, iou=0.1)
-    boxes = results[0].boxes
+
+    # 推論（confだけ適用、NMSは後処理で自前実行）
+    results = model.predict(img_cv, conf=conf_threshold, iou=1.0)
+    boxes_raw = results[0].boxes
     names = model.names
 
+    # 必要なデータ抽出
+    xyxy = boxes_raw.xyxy.cpu()
+    scores = boxes_raw.conf.cpu()
+    classes = boxes_raw.cls.cpu().int()
+
+    # torchvisionのNMSで重複除去（IoUしきい値指定）
+    keep = nms(xyxy, scores, iou_threshold=iou_threshold)
+    xyxy = xyxy[keep]
+    scores = scores[keep]
+    classes = classes[keep]
+
+    # 描画処理
     image_draw = image.copy()
     draw = ImageDraw.Draw(image_draw)
     font = ImageFont.load_default()
     count_dict = {}
 
-    for box in boxes:
-        conf = float(box.conf.item())
-        if conf < conf_threshold:
-            continue  # 指定された信頼度未満は無視
-
-        cls = int(box.cls.item())
+    for i in range(len(xyxy)):
+        x1, y1, x2, y2 = map(int, xyxy[i].tolist())
+        conf = scores[i].item()
+        cls = classes[i].item()
         label = f"{names[cls]}: {int(conf * 100)}%"
-        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
         draw.rectangle([x1, y1, x2, y2], outline="yellow", width=3)
         draw.text((x1, max(y1 - 15, 0)), label, fill="yellow", font=font)
         count_dict[names[cls]] = count_dict.get(names[cls], 0) + 1
@@ -70,7 +83,7 @@ with tab1:
     if uploaded_nutbolt:
         image = load_image(uploaded_nutbolt)
         if image:
-            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold)
+            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold, iou_threshold=0.4)
             count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
             st.image(processed_image, caption=f"検出結果（{conf_threshold:.2f}以上）：{count_summary}", use_container_width=True)
 
@@ -83,5 +96,5 @@ with tab2:
     if uploaded_screw:
         image = load_image(uploaded_screw)
         if image:
-            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold)
+            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold, iou_threshold=0.4)
             st.image(processed_image, caption=f"検出ネジ数（{conf_threshold:.2f}以上）：{sum(counts.values())}本", use_container_width=True)
