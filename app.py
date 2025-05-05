@@ -73,17 +73,17 @@ def detect_and_draw(image, model, conf_threshold=0.25, iou_threshold=0.4):
     return image_draw, count_dict
 
 # ✅ タブの順序を「ナット・ボルト → ネジ」に変更
-tab1, tab2 = st.tabs(["🔧 ナットとボルトカウント", "🔩 ネジカウント"])
+tab1, tab2 = st.tabs(["🔩 ナットとボルトカウント", "🔩 ネジカウント"])
 
 with tab1:
     st.header("ナット・ボルトカウントアプリ")
     nutbolt_model = load_model("nut_bolt_model.pt")
-    conf_threshold = st.slider("検出の信頼度しきい値（低いと誤検出が増えます）", 0.0, 1.0, 0.25, 0.01, key="conf1")
+    conf_threshold = st.slider("検出の信頼度しきい値（低いと検出が増えますが間違いも多くなります）", 0.0, 1.0, 0.25, 0.01, key="conf1")
     uploaded_nutbolt = st.file_uploader("ナットまたはボルトの画像をアップロード", type=None, key="nutbolt")
     if uploaded_nutbolt:
         image = load_image(uploaded_nutbolt)
         if image:
-            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold, iou_threshold=0.2)
+            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold, iou_threshold=0.1)
             count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
             st.image(processed_image, caption=f"検出結果（{conf_threshold:.2f}以上）：{count_summary}", use_container_width=True)
 
@@ -91,10 +91,10 @@ with tab1:
 with tab2:
     st.header("ネジカウントアプリ")
     screw_model = load_model("screw_model.pt")
-    conf_threshold = st.slider("検出の信頼度しきい値", 0.0, 1.0, 0.25, 0.01, key="conf2")
+    conf_threshold = st.slider("検出の信頼度しきい値（低いと検出が増えますが間違いも多くなります）", 0.0, 1.0, 0.25, 0.01, key="conf2")
     uploaded_screw = st.file_uploader("ネジの画像をアップロード", type=None, key="screw")
     if uploaded_screw:
         image = load_image(uploaded_screw)
         if image:
-            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold, iou_threshold=0.2)
+            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold, iou_threshold=0.1)
             st.image(processed_image, caption=f"検出ネジ数（{conf_threshold:.2f}以上）：{sum(counts.values())}本", use_container_width=True)
