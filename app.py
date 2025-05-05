@@ -83,7 +83,7 @@ with tab1:
     if uploaded_nutbolt:
         image = load_image(uploaded_nutbolt)
         if image:
-            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold, iou_threshold=0.4)
+            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold, iou_threshold=0.2)
             count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
             st.image(processed_image, caption=f"検出結果（{conf_threshold:.2f}以上）：{count_summary}", use_container_width=True)
 
@@ -96,5 +96,5 @@ with tab2:
     if uploaded_screw:
         image = load_image(uploaded_screw)
         if image:
-            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold, iou_threshold=0.4)
+            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold, iou_threshold=0.2)
             st.image(processed_image, caption=f"検出ネジ数（{conf_threshold:.2f}以上）：{sum(counts.values())}本", use_container_width=True)
