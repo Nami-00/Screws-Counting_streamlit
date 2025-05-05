@@ -58,7 +58,5 @@ with tab2:
     if uploaded_nutbolt:
         image = Image.open(uploaded_nutbolt).convert("RGB")
         processed_image, counts = detect_and_draw(image, nutbolt_model)
-streamlit run screw_counter_app.py
-streamlit run screw_counter_app.py
         count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
         st.image(processed_image, caption=f"検出結果：{count_summary}", use_container_width=True)
