@@ -33,7 +33,7 @@ def load_image(uploaded_file):
         return None
 
 # 画像処理＆描画共通関数
-def detect_and_draw(image, model):
+def detect_and_draw(image, model, conf_threshold=0.25):
     img_array = np.array(image)
     img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
     results = model(img_cv)
@@ -46,8 +46,11 @@ def detect_and_draw(image, model):
     count_dict = {}
 
     for box in boxes:
-        cls = int(box.cls.item())
         conf = float(box.conf.item())
+        if conf < conf_threshold:
+            continue  # 指定された信頼度未満は無視
+
+        cls = int(box.cls.item())
         label = f"{names[cls]}: {int(conf * 100)}%"
         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
         draw.rectangle([x1, y1, x2, y2], outline="yellow", width=3)
@@ -62,21 +65,23 @@ tab1, tab2 = st.tabs(["🔧 ナットとボルトカウント", "🔩 ネジカ�
 with tab1:
     st.header("ナット・ボルトカウントアプリ")
     nutbolt_model = load_model("nut_bolt_model.pt")
+    conf_threshold = st.slider("検出の信頼度しきい値（低いと誤検出が増えます）", 0.0, 1.0, 0.25, 0.01, key="conf1")
     uploaded_nutbolt = st.file_uploader("ナットまたはボルトの画像をアップロード", type=None, key="nutbolt")
     if uploaded_nutbolt:
         image = load_image(uploaded_nutbolt)
         if image:
-            processed_image, counts = detect_and_draw(image, nutbolt_model)
+            processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold)
             count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
-            st.image(processed_image, caption=f"検出結果：{count_summary}", use_container_width=True)
+            st.image(processed_image, caption=f"検出結果（{conf_threshold:.2f}以上）：{count_summary}", use_container_width=True)
+
 
 with tab2:
     st.header("ネジカウントアプリ")
     screw_model = load_model("screw_model.pt")
+    conf_threshold = st.slider("検出の信頼度しきい値", 0.0, 1.0, 0.25, 0.01, key="conf2")
     uploaded_screw = st.file_uploader("ネジの画像をアップロード", type=None, key="screw")
     if uploaded_screw:
         image = load_image(uploaded_screw)
         if image:
-            processed_image, counts = detect_and_draw(image, screw_model)
-            st.image(processed_image, caption=f"検出ネジ数：{sum(counts.values())}本", use_container_width=True)
-
+            processed_image, counts = detect_and_draw(image, screw_model, conf_threshold)
+            st.image(processed_image, caption=f"検出ネジ数（{conf_threshold:.2f}以上）：{sum(counts.values())}本", use_container_width=True)
