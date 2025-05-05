@@ -6,7 +6,7 @@ import cv2
 import os
 
 st.set_page_config(page_title="ネジ・ナットボルトカウントアプリ", layout="wide")
-st.title("🔩 ネジ・ナット・ボルト カウントアプリ")
+st.markdown("<h1 style='font-size: 36px;'>🔩 ネジ・ナット・ボルト カウントアプリ</h1>", unsafe_allow_html=True)
 
 # モデル読み込み
 def load_model(model_path):
@@ -15,7 +15,7 @@ def load_model(model_path):
         st.stop()
     return YOLO(model_path)
 
-# 画像処理＆描画共通関数
+# 共通処理関数
 def detect_and_draw(image, model):
     img_array = np.array(image)
     img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
@@ -39,20 +39,11 @@ def detect_and_draw(image, model):
 
     return image_draw, count_dict
 
-# タブで切り替え
-tab1, tab2 = st.tabs(["🔩 ネジカウント", "🔧 ナットとボルトカウント"])
+# ✅ 順番入れ替え（左がナット・ボルト）
+tab1, tab2 = st.tabs(["🔧 ナットとボルトカウント", "🔩 ネジカウント"])
 
 with tab1:
-    st.header("ネジカウントアプリ")
-    screw_model = load_model("screw_model.pt")
-    uploaded_screw = st.file_uploader("ネジの画像をアップロード", type=["jpg", "jpeg", "png"], key="screw")
-    if uploaded_screw:
-        image = Image.open(uploaded_screw).convert("RGB")
-        processed_image, counts = detect_and_draw(image, screw_model)
-        st.image(processed_image, caption=f"検出ネジ数：{sum(counts.values())}本", use_container_width=True)
-
-with tab2:
-    st.header("ナット・ボルトカウントアプリ")
+    st.markdown("<h2 style='font-size:28px;'>🔧 ナット・ボルトカウントアプリ</h2>", unsafe_allow_html=True)
     nutbolt_model = load_model("nut_bolt_model.pt")
     uploaded_nutbolt = st.file_uploader("ナットまたはボルトの画像をアップロード", type=["jpg", "jpeg", "png"], key="nutbolt")
     if uploaded_nutbolt:
@@ -60,3 +51,13 @@ with tab2:
         processed_image, counts = detect_and_draw(image, nutbolt_model)
         count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
         st.image(processed_image, caption=f"検出結果：{count_summary}", use_container_width=True)
+
+with tab2:
+    st.markdown("<h2 style='font-size:28px;'>🔩 ネジカウントアプリ</h2>", unsafe_allow_html=True)
+    screw_model = load_model("screw_model.pt")
+    uploaded_screw = st.file_uploader("ネジの画像をアップロード", type=["jpg", "jpeg", "png"], key="screw")
+    if uploaded_screw:
+        image = Image.open(uploaded_screw).convert("RGB")
+        processed_image, counts = detect_and_draw(image, screw_model)
+        st.image(processed_image, caption=f"検出ネジ数：{sum(counts.values())}本", use_container_width=True)
+
