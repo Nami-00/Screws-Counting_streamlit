@@ -36,7 +36,7 @@ def load_image(uploaded_file):
 def detect_and_draw(image, model, conf_threshold=0.25):
     img_array = np.array(image)
     img_cv = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-    results = model(img_cv)
+    results = model.predict(img_cv, conf=conf_threshold, iou=0.4)
     boxes = results[0].boxes
     names = model.names
 

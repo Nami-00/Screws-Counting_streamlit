@@ -1,27 +1,49 @@
-# 🔩 ネジカウントアプリ（YOLOv8 × Streamlit）
+# 🔧 ナット・ボルト・ネジ カウントアプリ（YOLOv8 × Streamlit）
 
-このアプリは、画像からネジの個数を自動で検出・カウントするツールです。YOLOv8 を使って物体検出を行い、Streamlit でシンプルなWebインターフェースを提供しています。
+YOLOv8 を使って、画像から「ナット」「ボルト」「ネジ」を物体検出・カウントする Streamlit アプリです。  
+**用途別に2つのタブに分かれており、デフォルトでは「ナット・ボルト」カウント機能が表示されます。**
 
-![demo](https://github.com/あなたのユーザー名/screw-counter-app/assets/xxx/画像ID) <!-- デモ画像を貼るならここ -->
+## 🚀 公開アプリ
+👉 [アプリを見る](https://screws-countingapp-8pbgad222ompbsshjqm6ge.streamlit.app/)
+
+## 🎯 特長
+
+- ✅ 画像をアップロードするだけで自動で検出・分類
+- ✅ 「ナット」「ボルト」「ネジ」をクラスごとに個数表示
+- ✅ 結果画像に枠線と信頼度（％）を表示
+- ✅ タブ切り替えで2つの検出モデルを使い分け
+
+## 📸 使用イメージ
+
+| タブ | 内容 |
+|------|------|
+| 🔧 ナットとボルトカウント | ボルト、ナット、ワッシャーなど複数クラスを同時にカウント |
+| 🔩 ネジカウント | 単一または類似形状のネジを一括検出・カウント |
+
+## 🧠 使用技術
+| 技術 | 内容 |
+|------|------|
+| モデル | YOLOv8（ultralytics） |
+| UI | Streamlit |
+| 画像処理 | Pillow + OpenCV |
+| 学習済みモデル | `.pt`形式のPyTorchモデル（2種） |
 
 ---
 
-## 🚀 アプリの使い方
+## 📁 フォルダ構成
 
-### ✅ Streamlit Cloud で公開中（例）
+screws-counter-app/
+├── app.py # Streamlit アプリ本体
+├── screw_model.pt # ネジ検出モデル
+├── nut_bolt_model.pt # ナット・ボルト検出モデル
+├── requirements.txt # 必要ライブラリ
+└── README.md # 本ファイル
 
-👉 [https://yourname-screw-counter-app.streamlit.app](https://yourname-screw-counter-app.streamlit.app)
-
-1. ページを開いて画像（JPG/PNG）をアップロード
-2. 自動的にネジを検出して、バウンディングボックスと信頼度を表示
-3. 検出数が下に表示されます
-
----
-
-## 🛠️ インストール方法（ローカル実行）
+## 💻 ローカルでの実行方法
 
 ```bash
-git clone https://github.com/あなたのユーザー名/screw-counter-app.git
-cd screw-counter-app
+git clone https://github.com/Nami-00/screws-counter-app.git
+cd screws-counter-app
 pip install -r requirements.txt
 streamlit run app.py
+※ モデルファイルが大きい場合は .pt ファイルを gdown 経由でダウンロードする設計に変更可能です。
