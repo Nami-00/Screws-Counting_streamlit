@@ -85,9 +85,10 @@ with tab1:
         if image:
             processed_image, counts = detect_and_draw(image, nutbolt_model, conf_threshold, iou_threshold=0.1)
             count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
+            total_count = sum(counts.values())
             st.image(processed_image, caption=f"検出結果（{conf_threshold:.2f}以上）：{count_summary}", use_container_width=True)
-
-
+            st.markdown(f"### 🧮 合計個数：{total_count}個")
+            
 with tab2:
     st.header("ネジカウントアプリ")
     screw_model = load_model("screw_model.pt")
