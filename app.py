@@ -72,8 +72,11 @@ def detect_and_draw(image, model, conf_threshold=0.25, iou_threshold=0.4):
 
     return image_draw, count_dict
 
-# ✅ タブの順序を「ナット・ボルト → ネジ」に変更
-tab1, tab2 = st.tabs(["🔩 ナットとボルトカウント", "🔩 ネジカウント"])
+tab1, tab2, tab3 = st.tabs([
+    "🔩 ナットとボルトカウント", 
+    "🔩 ネジカウント", 
+    "🔩 ナット・ボルト・ワッシャーカウント"
+])
 
 with tab1:
     st.header("ナット・ボルトカウントアプリ")
@@ -99,3 +102,18 @@ with tab2:
         if image:
             processed_image, counts = detect_and_draw(image, screw_model, conf_threshold, iou_threshold=0.1)
             st.image(processed_image, caption=f"検出ネジ数（{conf_threshold:.2f}以上）：{sum(counts.values())}本", use_container_width=True)
+
+# 3つ目のタブ
+with tab3:
+    st.header("ナット・ボルト・ワッシャーカウントアプリ")
+    nbw_model = load_model("nut_bolt_washer_model.pt")
+    conf_threshold = st.slider("検出の信頼度しきい値（低いと検出が増えますが間違いも多くなります）", 0.0, 1.0, 0.25, 0.01, key="conf3")
+    uploaded_img = st.file_uploader("ナット・ボルト・ワッシャーの画像をアップロード", type=None, key="nbw")
+    if uploaded_img:
+        image = load_image(uploaded_img)
+        if image:
+            processed_image, counts = detect_and_draw(image, nbw_model, conf_threshold, iou_threshold=0.1)
+            count_summary = "、".join([f"{k}: {v}個" for k, v in counts.items()])
+            total_count = sum(counts.values())
+            st.image(processed_image, caption=f"検出結果（{conf_threshold:.2f}以上）：{count_summary}", use_container_width=True)
+            st.markdown(f"### 🧮 合計個数：{total_count}個")
